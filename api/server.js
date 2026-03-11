@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const cron = require('node-cron');
 const { DateTime } = require('luxon');
-const { getTopApps } = require('../scraper');
+const { getTopApps } = require('./scraper');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
