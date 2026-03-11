@@ -2,9 +2,9 @@
   "name": "googleplaystore",
   "version": "1.0.0",
   "description": "",
-  "main": "api/server.js",
+  "main": "api/index.js",
   "scripts": {
-    "start": "node api/server.js",
+    "start": "node api/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

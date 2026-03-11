@@ -10,7 +10,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.static(path.join(__dirname, '..')));
+
+// Vercel already serves static files from the root, so express.static is not needed here
+// and can cause routing confusion in a serverless environment.
 
 // Path for storing historical data (Vercel uses /tmp for writable storage)
 const isVercel = process.env.VERCEL === '1';
@@ -100,8 +102,14 @@ if (!isVercel) {
     });
 }
 
+// For local development, serve static files
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+    app.use(express.static(path.join(__dirname, '..')));
+}
+
 // API endpoint to get the latest ranking data
-app.get('/apps', async (req, res) => {
+// We match multiple possible paths to handle local dev, Vercel rewrites, and direct calls
+app.get(['/', '/apps', '/api/apps', '/api/index'], async (req, res) => {
     try {
         const today = DateTime.now().setZone('Asia/Seoul').toFormat('yyyy-MM-dd');
         const history = JSON.parse(fs.readFileSync(HISTORY_FILE, 'utf8'));

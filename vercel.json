@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/apps",
-      "destination": "/api/server.js"
+      "destination": "/api/index"
     }
   ]
 }
