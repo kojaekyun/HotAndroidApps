@@ -4,10 +4,6 @@
     {
       "source": "/apps",
       "destination": "/api/server.js"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/public/$1"
     }
   ]
 }
