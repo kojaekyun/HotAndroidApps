@@ -86,13 +86,19 @@ async function runDailyBatch() {
     }
 }
 
-// Schedule: KST 00:00 (Every day)
-cron.schedule('0 0 * * *', async () => {
-    console.log('[Cron] Midnight task triggered (KST)');
-    await runDailyBatch();
-}, {
-    timezone: "Asia/Seoul"
-});
+// Schedule: KST 00:00 (Every day) - Only for local/persistent environments
+if (!isVercel) {
+    cron.schedule('0 0 * * *', async () => {
+        console.log('[Cron] Midnight task triggered (KST)');
+        try {
+            await runDailyBatch();
+        } catch (e) {
+            console.error('[Cron] Batch failed:', e.message);
+        }
+    }, {
+        timezone: "Asia/Seoul"
+    });
+}
 
 // API endpoint to get the latest ranking data
 app.get('/apps', async (req, res) => {

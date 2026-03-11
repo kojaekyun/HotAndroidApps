@@ -10,7 +10,7 @@ async function getTopApps() {
         console.log('[Scraper] Fetching top free list...');
         const basicResults = await gplay.list({
             collection: gplay.collection.TOP_FREE,
-            num: 300,
+            num: 200, // Reduced from 300 to stay within 10s timeout
             lang: 'ko',
             country: 'kr'
         });
@@ -18,17 +18,21 @@ async function getTopApps() {
         console.log(`[Scraper] Found ${basicResults.length} basic results. Fetching details in batches...`);
 
         const filteredApps = [];
-        const BATCH_SIZE = 15; // Safe concurrency
+        const BATCH_SIZE = 25; // Increased for higher concurrency
+        const startTime = Date.now();
 
         for (let i = 0; i < basicResults.length && filteredApps.length < 100; i += BATCH_SIZE) {
+            // Safety: If we've already spent 8 seconds, just return what we have
+            if (Date.now() - startTime > 8000) {
+                console.log('[Scraper] Approaching timeout, returning results early.');
+                break;
+            }
+
             const batch = basicResults.slice(i, i + BATCH_SIZE);
             console.log(`[Scraper] Processing batch ${Math.floor(i / BATCH_SIZE) + 1} (${batch.length} apps)...`);
             
             const details = await Promise.all(
-                batch.map(app => gplay.app({ appId: app.appId, lang: 'ko', country: 'kr' }).catch(err => {
-                    console.error(`[Scraper] Failed for ${app.appId}: ${err.message}`);
-                    return null;
-                }))
+                batch.map(app => gplay.app({ appId: app.appId, lang: 'ko', country: 'kr' }).catch(err => null))
             );
 
             for (const app of details) {
