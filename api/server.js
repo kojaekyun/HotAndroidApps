@@ -4,24 +4,25 @@ const path = require('path');
 const fs = require('fs');
 const cron = require('node-cron');
 const { DateTime } = require('luxon');
-const { getTopApps } = require('./scraper');
+const { getTopApps } = require('../scraper');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Path for storing historical data (Vercel uses /tmp for writable storage)
 const isVercel = process.env.VERCEL === '1';
 const HISTORY_FILE = isVercel 
     ? path.join('/tmp', 'history.json') 
-    : path.join(__dirname, 'data', 'history.json');
+    : path.join(__dirname, '../data', 'history.json');
 
 // Ensure history directory exists (skip on Vercel as we use /tmp)
 if (!isVercel) {
-    if (!fs.existsSync(path.join(__dirname, 'data'))) {
-        fs.mkdirSync(path.join(__dirname, 'data'), { recursive: true });
+    const dataDir = path.join(__dirname, '../data');
+    if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
     }
 }
 
