@@ -7,20 +7,31 @@ const { DateTime } = require('luxon');
 const { getTopApps } = require('./scraper');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Path for storing historical data
-const HISTORY_FILE = path.join(__dirname, 'data', 'history.json');
+// Path for storing historical data (Vercel uses /tmp for writable storage)
+const isVercel = process.env.VERCEL === '1';
+const HISTORY_FILE = isVercel 
+    ? path.join('/tmp', 'history.json') 
+    : path.join(__dirname, 'data', 'history.json');
 
-// Ensure history file exists
-if (!fs.existsSync(path.join(__dirname, 'data'))) {
-    fs.mkdirSync(path.join(__dirname, 'data'), { recursive: true });
+// Ensure history directory exists (skip on Vercel as we use /tmp)
+if (!isVercel) {
+    if (!fs.existsSync(path.join(__dirname, 'data'))) {
+        fs.mkdirSync(path.join(__dirname, 'data'), { recursive: true });
+    }
 }
+
+// Initial history file if it doesn't exist
 if (!fs.existsSync(HISTORY_FILE)) {
-    fs.writeFileSync(HISTORY_FILE, JSON.stringify({}));
+    try {
+        fs.writeFileSync(HISTORY_FILE, JSON.stringify({}));
+    } catch (e) {
+        console.error('Failed to create history file:', e.message);
+    }
 }
 
 // Function to calculate rank changes and save history
@@ -102,7 +113,11 @@ app.get('/apps', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server started on http://localhost:${PORT}`);
-    console.log('Daily batch scheduled for 00:00 KST');
-});
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server started on http://localhost:${PORT}`);
+        console.log('Daily batch scheduled for 00:00 KST');
+    });
+}
+
+module.exports = app;
