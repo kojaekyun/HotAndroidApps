@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔥 Hot Android Apps (Top 100)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🔥 Hot Android Apps</h1>
+            <p class="subtitle">광고 포함 무료 앱 인기 순위 (게임/쇼핑 제외)</p>
+            <p id="snapshot-date" class="snapshot-info"></p>
+        </header>
+
+        <div id="apps">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>앱 리스트를 분석 중입니다... (약 5~10초 소요)</p>
+                <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 8px;">조건에 맞는 앱(광고 포함, 게임/쇼핑 제외)을 선별하고 있습니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchApps() {
+            const appsContainer = document.getElementById('apps');
+            const dateContainer = document.getElementById('snapshot-date');
+            try {
+                const response = await fetch('/apps');
+                const data = await response.json();
+
+                if (!data.apps || data.apps.length === 0) {
+                    appsContainer.innerHTML = '<div class="loading">데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</div>';
+                    return;
+                }
+
+                dateContainer.innerText = `업데이트 시점: ${data.date} (KST 00:00 기준)`;
+                appsContainer.innerHTML = ''; // Clear loading message
+
+                data.apps.forEach(app => {
+                    const appElement = document.createElement('div');
+                    appElement.className = 'app' + (app.isSurge ? ' surge-card' : '') + (app.isPlummet ? ' plummet-card' : '');
+
+                    // Rank change HTML
+                    let changeHtml = '';
+                    if (app.status === 'new') {
+                        changeHtml = '<span class="change-new">NEW</span>';
+                    } else if (app.status === 'up') {
+                        changeHtml = `<span class="change-up">▲${app.change}</span>`;
+                    } else if (app.status === 'down') {
+                        changeHtml = `<span class="change-down">▼${Math.abs(app.change)}</span>`;
+                    } else {
+                        changeHtml = '<span class="change-stable">-</span>';
+                    }
+
+                    // Special badges for surge/plummet
+                    const surgeBadge = app.isSurge ? '<span class="badge-surge">🚀 급등</span>' : '';
+                    const plummetBadge = app.isPlummet ? '<span class="badge-plummet">⚠️ 급락</span>' : '';
+
+                    appElement.innerHTML = `
+                        <div class="rank-container">
+                            <div class="rank">${app.rank}</div>
+                            <div class="change-indicator">${changeHtml}</div>
+                        </div>
+                        <div class="icon-container">
+                            <img src="${app.icon}" alt="${app.name}" class="icon">
+                        </div>
+                        <div class="info">
+                            <div class="name-container">
+                                <a href="${app.link}" target="_blank" class="name-link">${app.name}</a>
+                                ${surgeBadge} ${plummetBadge}
+                            </div>
+                            <div class="meta">
+                                <span class="developer">${app.developer}</span>
+                                <span class="category">${app.category}</span>
+                                ${app.adSupported ? '<span class="badge-ads">광고 포함</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="downloads">⭐ ${app.downloads}</div>
+                    `;
+                    appsContainer.appendChild(appElement);
+                });
+
+            } catch (error) {
+                console.error('Error:', error);
+                appsContainer.innerHTML = '<div class="loading">서버와 연결할 수 없습니다.</div>';
+            }
+        }
+
+        // Initialize
+        fetchApps();
+    </script>
+</body>
+
+</html>
